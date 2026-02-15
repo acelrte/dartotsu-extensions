@@ -1,0 +1,11 @@
+[
+  {
+    "id": "hianime",
+    "name": "Hianime",
+    "type": "anime",
+    "version": "1.0.0",
+    "description": "Hianime source for Dartotsu iOS (updated version)",
+    "author": "YourName",
+    "url": "https://raw.githubusercontent.com/YOURUSERNAME/dartotsu-hianime/main/hianime.js"
+  }
+]
