@@ -1,0 +1,113 @@
+package eu.kanade.tachiyomi.animeextension.en.hianime
+
+import eu.kanade.tachiyomi.animesource.model.*
+import eu.kanade.tachiyomi.animesource.online.ParsedAnimeHttpSource
+import eu.kanade.tachiyomi.network.GET
+import okhttp3.Request
+import org.jsoup.nodes.Element
+
+class Hianime : ParsedAnimeHttpSource() {
+
+    override val name = "HiAnime"
+    override val baseUrl = "https://hianime.to"
+    override val lang = "en"
+    override val supportsLatest = true
+
+    // ======================
+    // Popular
+    // ======================
+
+    override fun popularAnimeRequest(page: Int): Request =
+        GET("$baseUrl/top-airing?page=$page", headers)
+
+    override fun popularAnimeSelector() = "div.film_list-wrap div.flw-item"
+
+    override fun popularAnimeFromElement(element: Element): SAnime {
+        val anime = SAnime.create()
+
+        anime.title = element.select("h3.film-name a").text()
+        anime.url = element.select("h3.film-name a").attr("href")
+        anime.thumbnail_url =
+            element.select("img.film-poster-img").attr("data-src")
+
+        return anime
+    }
+
+    override fun popularAnimeNextPageSelector() = "ul.pagination li.active + li"
+
+    // ======================
+    // Latest
+    // ======================
+
+    override fun latestUpdatesRequest(page: Int): Request =
+        GET("$baseUrl/recently-updated?page=$page", headers)
+
+    override fun latestUpdatesSelector() = popularAnimeSelector()
+
+    override fun latestUpdatesFromElement(element: Element) =
+        popularAnimeFromElement(element)
+
+    override fun latestUpdatesNextPageSelector() =
+        popularAnimeNextPageSelector()
+
+    // ======================
+    // Search
+    // ======================
+
+    override fun searchAnimeRequest(page: Int, query: String, filters: AnimeFilterList): Request =
+        GET("$baseUrl/search?keyword=$query&page=$page", headers)
+
+    override fun searchAnimeSelector() = popularAnimeSelector()
+
+    override fun searchAnimeFromElement(element: Element) =
+        popularAnimeFromElement(element)
+
+    override fun searchAnimeNextPageSelector() =
+        popularAnimeNextPageSelector()
+
+    // ======================
+    // Details
+    // ======================
+
+    override fun animeDetailsParse(document: org.jsoup.nodes.Document): SAnime {
+        val anime = SAnime.create()
+
+        anime.title = document.select("h2.film-name").text()
+        anime.description = document.select("div.description").text()
+        anime.genre = document.select("div.elements a").joinToString(", ") { it.text() }
+        anime.thumbnail_url =
+            document.select("img.film-poster-img").attr("src")
+
+        return anime
+    }
+
+    // ======================
+    // Episodes
+    // ======================
+
+    override fun episodeListParse(document: org.jsoup.nodes.Document): List<SEpisode> {
+        return document.select("ul#episode_page li a").map {
+            SEpisode.create().apply {
+                name = "Episode ${it.text()}"
+                url = it.attr("href")
+            }
+        }.reversed()
+    }
+
+    // ======================
+    // Videos
+    // ======================
+
+    override fun videoListParse(document: org.jsoup.nodes.Document): List<Video> {
+        val videos = mutableListOf<Video>()
+
+        document.select("div.server-item").forEach {
+            val link = it.attr("data-video")
+            val name = it.text()
+
+            videos.add(Video(link, name, link))
+        }
+
+        return videos
+    }
+}
