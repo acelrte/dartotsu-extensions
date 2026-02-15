@@ -1,0 +1,9 @@
+{
+  "name": "Hianime",
+  "id": "hianime",
+  "version": "1.0.0",
+  "author": "YourName",
+  "description": "Hianime source for Dartotsu",
+  "type": "anime",
+  "entry": "src/hianime.js"
+}
